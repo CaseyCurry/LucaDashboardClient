@@ -1,0 +1,37 @@
+button {
+  background-color: $tertiary-background-color;
+  color: $primary-font-color;
+  letter-spacing: 1px;
+  box-shadow: rgba(0, 0, 0, .5) 2px 2px 5px 0, transparent 0 0 0 0, transparent 0 0 0 0;
+  border: solid $border-width/2 $high-contrast-border-color;
+  border-radius: $border-radius;
+  padding: $control-margin $control-margin * 2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  margin-left: $control-margin;
+  margin-right: $control-margin;
+
+  img {
+    filter: invert(1);
+  }
+
+  &:focus {
+    outline: 0;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background-color: mix(white, gray, 70%);
+
+    img {
+      // https://medium.com/@union_io/swapping-fill-color-on-image-tag-svgs-using-css-filters-fa4818bf7ec6
+      filter: invert(.9) !important;
+    }
+  }
+
+  &:hover:not(:disabled) {
+    @include call-to-action(true);
+    transition: 0.3s;
+  }
+}

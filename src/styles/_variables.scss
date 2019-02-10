@@ -1,0 +1,23 @@
+// colors
+$primary-background-color: #000;
+$secondary-background-color: #202020;
+$tertiary-background-color: rgba(255, 255, 255, 0.25);
+
+// fonts
+$primary-font-size: 110%;
+$primary-font-family: "Lato", sans-serif;
+$primary-font-color: white;
+$secondary-font-color: #202020;
+
+// call-to-action
+$call-to-action-color: #43a443;
+$call-to-action-font-color: white;
+
+// borders
+$border-width: 2px;
+$border-radius: 2px;
+$high-contrast-border-color: $primary-font-color;
+$low-contrast-border-color: $tertiary-background-color;
+
+// margins and padding
+$control-margin: 5px;

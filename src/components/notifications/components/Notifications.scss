@@ -1,0 +1,43 @@
+$notification-width: 200px;
+$notification-margin: $control-margin / 2;
+$action-height: 24px;
+
+.notifications {
+  position: absolute;
+  top: 0;
+  right: 0;
+
+  .actions {
+    display: inline-block;
+    position: relative;
+    z-index: 100;
+    margin-right: $notification-width + ($notification-margin * 2);
+    transition: transform .5s;
+    transform: translateY(-100%);
+
+    &.displayed {
+      transform: translateY(0);
+      margin-top: $control-margin;
+    }
+
+    >img {
+      filter: invert(.9);
+      height: $action-height;
+      width: $action-height;
+      margin-right: $control-margin;
+    }
+  }
+
+  >ul {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    >li {
+      width: $notification-width;
+      margin: $notification-margin $notification-margin 0 0;
+
+      @import "./Notification";
+    }
+  }
+}

@@ -1,0 +1,76 @@
+@import "variables";
+
+@mixin call-to-action($lighten-background: false) {
+  @if $lighten-background==true {
+    background-color: mix(white, $call-to-action-color, 20%) !important;
+  } @else {
+    background-color: $call-to-action-color !important;
+  }
+
+  color: $call-to-action-font-color !important;
+  font-weight: bold;
+}
+
+@mixin error() {
+  &.error {
+    outline: none;
+    border: solid $border-width red;
+    box-shadow: 0 0 5px red;
+  }
+}
+
+html,
+body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+#dashboard {
+  > div {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+
+    > div {
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  font-family: $primary_font-family;
+  font-size: $primary-font-size;
+  color: $primary-font-color;
+  background-color: $primary-background-color;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: auto;
+
+  ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  img {
+    height: 24px;
+    width: 24px;
+  }
+
+  // controls
+  @import "../controls/Loader";
+  // @import "../controls/Workspace";
+  @import "../controls/Button";
+  // @import "../controls/Vertical-Tabs.scss";
+  // @import "../controls/Segmented-Control.scss";
+  @import "../controls/Checkbox.scss";
+  @import "../controls/Dialog.scss";
+
+  // components
+  @import "../components/notifications/components/Notifications";
+
+  // pages
+  @import "../pages/dashboard/components/Dashboard";
+  @import "../pages/expense-category/components/Expense-Category";
+}

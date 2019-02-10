@@ -1,0 +1,29 @@
+.metal-stack {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  .icon {
+    display: inline-block;
+    padding-top: 12px;
+    vertical-align: top;
+
+    img {
+      height: 40px;
+      width: 40px;
+    }
+
+    img[alt="gold"] {
+      filter: invert(0.8) sepia(1) saturate(15) hue-rotate(315deg);
+    }
+
+    img[alt="silver"] {
+      filter: invert(0.7);
+    }
+  }
+
+  .details {
+    display: inline-block;
+    padding-left: 15px;
+  }
+}

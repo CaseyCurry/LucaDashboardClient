@@ -1,0 +1,27 @@
+.rule {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  .icon {
+    display: inline-block;
+    font-size: 34px;
+    font-weight: bolder;
+    color: red;
+    vertical-align: top;
+    font-family: "Quicksand", sans-serif;
+
+    > div {
+      transform: rotate(90deg);
+      transform-origin: left top 0;
+      margin-left: 64px;
+      margin-top: -40px;
+      font-size: 16px;
+    }
+  }
+
+  .details {
+    display: inline-block;
+    margin-left: -15px;
+  }
+}

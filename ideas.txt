@@ -1,0 +1,26 @@
+liabilities
+royalties
+stocks
+budget
+net worth month by month vertical bar chart
+
+bad purchases
+
+https://uber.github.io/react-vis/examples/showcases/treemaps
+treemap of categories and subcategories
+
+https://uber.github.io/react-vis/examples/showcases/plots
+hexbin
+contour series
+
+## savings / income line graph
+## line chart of income and expenses
+## https://uber.github.io/react-vis/examples/showcases/sankeys
+## sankey of income to expenses/savings
+## ytd expenses
+## rule of 25
+## rule of 33
+## comparison of income by type
+## % of expenses covered by 3/4% rule
+## https://uber.github.io/react-vis/examples/showcases/sunbursts
+## radial bar chart of income by type

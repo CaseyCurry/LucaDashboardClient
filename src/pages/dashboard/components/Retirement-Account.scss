@@ -1,0 +1,22 @@
+.retirement-account {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  .icon {
+    display: inline-block;
+    padding-top: 12px;
+    vertical-align: top;
+
+    img {
+      height: 35px;
+      width: 35px;
+      filter: invert(0.7) sepia(1) saturate(40) hue-rotate(345deg);
+    }
+  }
+
+  .details {
+    display: inline-block;
+    padding-left: 15px;
+  }
+}
