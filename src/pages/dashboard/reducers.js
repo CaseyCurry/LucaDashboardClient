@@ -1,32 +1,45 @@
 import moment from "moment";
 
 const periods = {
-  currentPeriod: moment()
-    .subtract(1, "months")
-    .format("YYYYMM"),
-  previousPeriod: moment()
-    .subtract(2, "months")
-    .format("YYYYMM"),
-  currentYear: {
-    begin: moment()
-      .subtract(1, "years")
-      .format("YYYYMM"),
-    end: moment()
+  currentPeriod: parseInt(
+    moment()
       .subtract(1, "months")
       .format("YYYYMM")
+  ),
+  previousPeriod: parseInt(
+    moment()
+      .subtract(2, "months")
+      .format("YYYYMM")
+  ),
+  currentYear: {
+    begin: parseInt(
+      moment()
+        .subtract(1, "years")
+        .format("YYYYMM")
+    ),
+    end: parseInt(
+      moment()
+        .subtract(1, "months")
+        .format("YYYYMM")
+    )
   },
   previousYear: {
-    begin: moment()
-      .subtract(2, "years")
-      .format("YYYYMM"),
-    end: moment()
-      .subtract(1, "years")
-      .subtract(1, "months")
-      .format("YYYYMM")
+    begin: parseInt(
+      moment()
+        .subtract(2, "years")
+        .format("YYYYMM")
+    ),
+    end: parseInt(
+      moment()
+        .subtract(1, "years")
+        .subtract(1, "months")
+        .format("YYYYMM")
+    )
   }
 };
 
 const initialState = Object.freeze({
+  periods,
   areCheckingAccountsLoading: false,
   checkingAccounts: [],
   expensesByCategory: [],
@@ -39,19 +52,19 @@ const initialState = Object.freeze({
   retirementAccounts: [],
   netWorth: 0,
   periodMetrics: [],
+  savingsSummary: null,
   incomeTypes: [],
-  currentPeriodRegularExpenses: 0
+  currentMonthRegularExpenses: 0,
+  areBadPurchasesLoading: false,
+  badPurchases: {
+    details: [],
+    years: []
+  },
+  areCategorizedBalancesLoading: false,
+  categorizedBalances: [],
+  areCategoriesLoading: false,
+  categories: []
 });
-
-const getCheckingAccountBalances = accounts => {
-  return accounts.map(account => {
-    const balance = account.balances.reduce((x, y) => x + y.amount, 0);
-    return {
-      name: account.name,
-      balance
-    };
-  });
-};
 
 const getPercentChanged = (x, y) => {
   let change = 0;
@@ -65,177 +78,257 @@ const getPercentChanged = (x, y) => {
   return change;
 };
 
-const getExpensesByCategory = accounts => {
-  if (!accounts.length) {
-    return [];
-  }
-  const categories = accounts
-    .reduce((x, y) => {
-      x.push(...y.balances);
-      return x;
-    }, [])
-    .filter(balance => {
-      return (
-        balance.period >= periods.previousYear.begin &&
-        balance.period <= periods.currentPeriod
-      );
-    })
-    .map(balance => {
-      return {
-        category: balance.categorization.category,
-        period: balance.period,
-        amount:
-          balance.categorization.category === "income"
-            ? balance.amount
-            : balance.amount * -1
-      };
-    })
-    .reduce((x, { category, period, amount }) => {
-      if (!x[category]) {
-        x[category] = {
+const getExpensesByCategory = balances => {
+  const categories = balances.reduce((x, y) => {
+    y.subcategories.forEach(subcategory => {
+      if (!x[subcategory.categorization.category]) {
+        x[subcategory.categorization.category] = {
           currentMonth: 0,
-          previousMonth: 0,
           currentYear: 0,
+          previousMonth: 0,
           previousYear: 0
         };
       }
+      const amount =
+        subcategory.categorization.category === "income"
+          ? subcategory.balance
+          : subcategory.balance * -1;
       if (
-        period >= periods.currentYear.begin &&
-        period <= periods.currentYear.end
+        y.period >= periods.currentYear.begin &&
+        y.period <= periods.currentYear.end
       ) {
-        x[category].currentYear += amount;
+        x[subcategory.categorization.category].currentYear += amount;
       } else {
-        x[category].previousYear += amount;
-      }
-      if (period === periods.currentPeriod) {
-        x[category].currentMonth += amount;
-      } else if (period === periods.previousPeriod) {
-        x[category].previousMonth += amount;
-      }
-      return x;
-    }, {});
-  return Object.keys(categories)
-    .map(category => {
-      const currentMonth = categories[category].currentMonth;
-      const previousMonth = categories[category].previousMonth;
-      const currentYear = categories[category].currentYear;
-      const previousYear = categories[category].previousYear;
-      return {
-        category,
-        currentMonth,
-        previousMonth: getPercentChanged(currentMonth, previousMonth),
-        currentYear,
-        previousYear: getPercentChanged(currentYear, previousYear)
-      };
-    })
-    .sort((x, y) => y.currentMonth - x.currentMonth);
-};
-
-const getExpensesBySubcategory = accounts => {
-  const categories = accounts
-    .reduce((x, y) => x.concat(...y.balances), [])
-    .filter(balance => balance.categorization.category !== "income")
-    .filter(
-      balance =>
-        balance.period >= periods.currentYear.begin &&
-        balance.period <= periods.currentYear.end
-    )
-    .reduce((x, y) => {
-      const category = y.categorization.category;
-      if (!x[category]) {
-        x[category] = {};
-      }
-      const subcategory = y.categorization.subcategory;
-      if (!x[category][subcategory]) {
-        x[category][subcategory] = {
-          currentPeriodAmount: 0,
-          currentYearAmount: 0
-        };
+        x[subcategory.categorization.category].previousYear += amount;
       }
       if (y.period === periods.currentPeriod) {
-        x[category][subcategory].currentPeriodAmount += y.amount * -1;
+        x[subcategory.categorization.category].currentMonth += amount;
+      } else if (y.period === periods.previousPeriod) {
+        x[subcategory.categorization.category].previousMonth += amount;
       }
-      x[category][subcategory].currentYearAmount += y.amount * -1;
-      return x;
-    }, {});
-  return Object.keys(categories).map(category => {
-    const subcategories = Object.keys(categories[category]).map(subcategory => {
-      return Object.assign({}, categories[category][subcategory], {
-        subcategory
-      });
     });
+    return x;
+  }, {});
+  return Object.keys(categories).map(category => {
     return {
       category,
-      subcategories
+      currentMonth: categories[category].currentMonth,
+      previousMonth: getPercentChanged(
+        categories[category].currentMonth,
+        categories[category].previousMonth
+      ),
+      currentYear: categories[category].currentYear,
+      previousYear: getPercentChanged(
+        categories[category].currentYear,
+        categories[category].previousYear
+      )
     };
   });
 };
 
-const getPeriodMetrics = accounts => {
-  const periods = accounts
-    .reduce((x, y) => x.concat(...y.balances), [])
-    .reduce((x, y) => {
-      const period = y.period;
-      const income = y.categorization.category === "income" ? y.amount : 0;
-      const expense =
-        y.categorization.category !== "income" &&
-        y.categorization.category !== "investments"
-          ? y.amount * -1
-          : 0;
-      const investment =
-        y.categorization.category === "investments" ? y.amount * -1 : 0;
-      if (!x[period]) {
-        x[period] = { income: 0, expense: 0, investment: 0 };
-      }
-      x[period].income += income;
-      x[period].expense += expense;
-      x[period].investment += investment;
-      return x;
-    }, {});
-  return Object.keys(periods)
-    .filter(period => period !== "201212") // 2013 is the beginning of time.
-    .sort((x, y) => new Date(x) - new Date(y))
-    .map(period => {
-      const date = moment(period, "YYYYMM");
-      return {
-        date,
-        income: periods[period].income,
-        expense: periods[period].expense,
-        investment: periods[period].investment,
-        savingsRate:
-          ((periods[period].income - periods[period].expense) /
-            periods[period].income) *
-          100
-      };
-    });
+const getExpensesBySubcategory = balances => {
+  const categories = balances.reduce((x, y) => {
+    y.subcategories
+      .filter(subcategory => subcategory.categorization.category !== "income")
+      .forEach(subcategory => {
+        if (!x[subcategory.categorization.category]) {
+          x[subcategory.categorization.category] = {
+            subcategories: {}
+          };
+        }
+        if (
+          !x[subcategory.categorization.category].subcategories[
+            subcategory.categorization.subcategory
+          ]
+        ) {
+          x[subcategory.categorization.category].subcategories[
+            subcategory.categorization.subcategory
+          ] = {
+            currentMonth: 0,
+            currentYear: 0
+          };
+        }
+        const amount = subcategory.balance * -1;
+        if (
+          y.period >= periods.currentYear.begin &&
+          y.period <= periods.currentYear.end
+        ) {
+          x[subcategory.categorization.category].subcategories[
+            subcategory.categorization.subcategory
+          ].currentYear += amount;
+        }
+        if (y.period === periods.currentPeriod) {
+          x[subcategory.categorization.category].subcategories[
+            subcategory.categorization.subcategory
+          ].currentMonth += amount;
+        }
+      });
+    return x;
+  }, {});
+  return Object.keys(categories).map(category => {
+    return {
+      category,
+      subcategories: Object.keys(categories[category].subcategories).map(
+        subcategory => {
+          return {
+            subcategory,
+            ...categories[category].subcategories[subcategory]
+          };
+        }
+      )
+    };
+  });
 };
 
-const getIncomeTypes = accounts => {
-  const subcategories = accounts
-    .reduce((x, y) => x.concat(...y.balances), [])
-    .filter(balance => balance.categorization.category === "income")
-    .filter(
-      balance =>
-        balance.period >= periods.currentYear.begin &&
-        balance.period <= periods.currentYear.end
-    )
-    .reduce((x, y) => {
-      const subcategory = y.categorization.subcategory;
-      if (!x[subcategory]) {
-        x[subcategory] = {
-          currentPeriodAmount: 0,
-          currentYearAmount: 0
-        };
+const getPeriodMetrics = balances => {
+  return balances.map(balance => {
+    const metrics = balance.subcategories.reduce(
+      (x, y) => {
+        if (y.categorization.category === "income") {
+          x.income += y.balance;
+        } else if (y.categorization.category === "investments") {
+          x.investment += y.balance * -1;
+        } else {
+          x.expense += y.balance * -1;
+        }
+        return x;
+      },
+      {
+        expense: 0,
+        income: 0,
+        investment: 0
+      }
+    );
+    return {
+      period: balance.period,
+      ...metrics,
+      savings: metrics.income - metrics.expense,
+      savingsRate: ((metrics.income - metrics.expense) / metrics.income) * 100
+    };
+  });
+};
+
+const getSavingsSummary = periodMetrics => {
+  const summary = periodMetrics.reduce(
+    (x, y) => {
+      if (
+        y.period >= periods.currentYear.begin &&
+        y.period <= periods.currentYear.end
+      ) {
+        x.currentYear += y.savings;
+      } else {
+        x.previousYear += y.savings;
       }
       if (y.period === periods.currentPeriod) {
-        x[subcategory].currentPeriodAmount += y.amount;
+        x.currentMonth += y.savings;
+      } else if (y.period === periods.previousPeriod) {
+        x.previousMonth += y.savings;
       }
-      x[subcategory].currentYearAmount += y.amount;
       return x;
-    }, {});
+    },
+    {
+      currentMonth: 0,
+      previousMonth: 0,
+      currentYear: 0,
+      previousYear: 0
+    }
+  );
+  return {
+    category: "savings",
+    isCalculated: true,
+    currentMonth: summary.currentMonth,
+    previousMonth: getPercentChanged(
+      summary.currentMonth,
+      summary.previousMonth
+    ),
+    currentYear: summary.currentYear,
+    previousYear: getPercentChanged(summary.currentYear, summary.previousYear)
+  };
+};
+
+const getIncomeTypes = balances => {
+  const subcategories = balances.reduce((x, y) => {
+    y.subcategories
+      .filter(subcategory => subcategory.categorization.category === "income")
+      .forEach(subcategory => {
+        if (!x[subcategory.categorization.subcategory]) {
+          x[subcategory.categorization.subcategory] = {
+            currentMonth: 0,
+            currentYear: 0
+          };
+        }
+        const amount = subcategory.balance;
+        if (
+          y.period >= periods.currentYear.begin &&
+          y.period <= periods.currentYear.end
+        ) {
+          x[subcategory.categorization.subcategory].currentYear += amount;
+        }
+        if (y.period === periods.currentPeriod) {
+          x[subcategory.categorization.subcategory].currentMonth += amount;
+        }
+      });
+    return x;
+  }, {});
   return Object.keys(subcategories).map(subcategory => {
-    return Object.assign({}, subcategories[subcategory], { subcategory });
+    return {
+      subcategory,
+      ...subcategories[subcategory]
+    };
   });
+};
+
+const enrichCategorizedBalances = (balances, categories) => {
+  const queryableCategories = categories.reduce((x, y) => {
+    const subcategories = y.subcategories.reduce((xx, yy) => {
+      xx[yy.id] = {
+        id: yy.id,
+        category: y.name,
+        subcategory: yy.name
+      };
+      return xx;
+    }, {});
+    return { ...x, ...subcategories };
+  }, {});
+  return balances.map(balance => {
+    return {
+      period: balance.period,
+      subcategories: balance.subcategories.map(subcategory => {
+        return {
+          categorization: queryableCategories[subcategory.id],
+          balance: subcategory.balance
+        };
+      })
+    };
+  });
+};
+
+const formMetrics = (balances, categories) => {
+  if (!balances.length || !categories.length) {
+    return {};
+  }
+  const enrichedBalances = enrichCategorizedBalances(balances, categories);
+  const expensesByCategory = getExpensesByCategory(enrichedBalances);
+  const expensesBySubcategory = getExpensesBySubcategory(enrichedBalances);
+  const incomeTypes = getIncomeTypes(enrichedBalances);
+  const periodMetrics = getPeriodMetrics(enrichedBalances);
+  const savingsSummary = getSavingsSummary(periodMetrics);
+  let mostRecentMetrics = periodMetrics.find(
+    metrics => metrics.period === periods.currentPeriod
+  );
+  if (!mostRecentMetrics) {
+    mostRecentMetrics = periodMetrics.find(
+      metrics => metrics.period === periods.previousPeriod
+    );
+  }
+  return {
+    expensesByCategory,
+    expensesBySubcategory,
+    incomeTypes,
+    periodMetrics,
+    currentMonthRegularExpenses: mostRecentMetrics.expense,
+    savingsSummary
+  };
 };
 
 const calculateNetWorth = (
@@ -269,29 +362,35 @@ export default (state = initialState, action) => {
       });
     }
     case "GET_CHECKING_ACCOUNTS_FULFILLED": {
-      const checkingAccounts = getCheckingAccountBalances(action.payload);
-      const incomeTypes = getIncomeTypes(action.payload);
-      const expensesByCategory = getExpensesByCategory(action.payload);
-      const expensesBySubcategory = getExpensesBySubcategory(action.payload);
+      const checkingAccounts = action.payload;
       const netWorth = calculateNetWorth(
         checkingAccounts,
         state.metalStacks,
         state.spotPrices,
         state.retirementAccounts
       );
-      const periodMetrics = getPeriodMetrics(action.payload);
-      const currentPeriodRegularExpenses = periodMetrics.find(
-        metrics => metrics.date.format("YYYYMM") === periods.currentPeriod
-      ).expense;
       return Object.assign({}, state, {
         checkingAccounts,
-        expensesByCategory,
-        expensesBySubcategory,
         netWorth,
-        periodMetrics,
-        incomeTypes,
-        currentPeriodRegularExpenses,
         areCheckingAccountsLoading: false
+      });
+    }
+    case "GET_CATEGORIZED_BALANCES_PENDING": {
+      return Object.assign({}, state, {
+        areCategorizedBalancesLoading: true
+      });
+    }
+    case "GET_CATEGORIZED_BALANCES_REJECTED": {
+      return Object.assign({}, state, {
+        areCategorizedBalancesLoading: false
+      });
+    }
+    case "GET_CATEGORIZED_BALANCES_FULFILLED": {
+      const metrics = formMetrics(action.payload, state.categories);
+      return Object.assign({}, state, {
+        categorizedBalances: action.payload,
+        areCategorizedBalancesLoading: false,
+        ...metrics
       });
     }
     case "GET_METAL_STACKS_PENDING": {
@@ -392,6 +491,54 @@ export default (state = initialState, action) => {
         retirementAccounts: action.payload,
         netWorth,
         areRetirementAccountsLoading: false
+      });
+    }
+    case "GET_BAD_PURCHASES_PENDING": {
+      return Object.assign({}, state, {
+        areBadPurchasesLoading: true
+      });
+    }
+    case "GET_BAD_PURCHASES_REJECTED": {
+      return Object.assign({}, state, {
+        areBadPurchasesLoading: false
+      });
+    }
+    case "GET_BAD_PURCHASES_FULFILLED": {
+      const details = action.payload.sort(
+        (x, y) => new Date(y.date) - new Date(x.date)
+      );
+      const years = details.reduce((x, y) => {
+        const year = new Date(y.date).getFullYear().toString();
+        if (!x[year]) {
+          x[year] = 0;
+        }
+        x[year] += y.amount;
+        return x;
+      }, {});
+      return Object.assign({}, state, {
+        areBadPurchasesLoading: false,
+        badPurchases: {
+          details,
+          years
+        }
+      });
+    }
+    case "GET_CATEGORIES_PENDING": {
+      return Object.assign({}, state, {
+        areCategoriesLoading: true
+      });
+    }
+    case "GET_CATEGORIES_REJECTED": {
+      return Object.assign({}, state, {
+        areCategoriesLoading: false
+      });
+    }
+    case "GET_CATEGORIES_FULFILLED": {
+      const metrics = formMetrics(state.categorizedBalances, action.payload);
+      return Object.assign({}, state, {
+        areCategoriesLoading: false,
+        categories: action.payload,
+        ...metrics
       });
     }
   }

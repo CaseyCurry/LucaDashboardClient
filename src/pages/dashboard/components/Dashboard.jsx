@@ -6,11 +6,12 @@ import Rule from "./Rule";
 import CheckingAccount from "./Checking-Account";
 import RetirementAccount from "./Retirement-Account";
 import MetalStack from "./Metal-Stack";
-import Expense from "./Expense";
+import CategorySummary from "./Category-Summary";
 import Savings from "./charts/Savings";
-import IncomeVsExpenses from "./charts/Income-Vs-Expenses";
+import IncomeMap from "./charts/Income-Map";
 import IncomeByType from "./charts/Income-By-Type";
 import Investments from "./charts/Investments";
+import BadPurchases from "./charts/Bad-Purchases";
 
 class Dashboard extends React.Component {
   constructor(props) {
@@ -22,7 +23,10 @@ class Dashboard extends React.Component {
       this.props.areCheckingAccountsLoading ||
       this.props.areMetalStacksLoading ||
       this.props.areSpotPricesLoading ||
-      this.props.areRetirementAccountsLoading
+      this.props.areRetirementAccountsLoading ||
+      this.props.areBadPurchasesLoading ||
+      this.props.areCategorizedBalancesLoading ||
+      this.props.areCategoriesLoading
     ) {
       return (
         <div className="page">
@@ -41,29 +45,29 @@ class Dashboard extends React.Component {
             <Rule
               percent={2}
               netWorth={this.props.netWorth}
-              monthlyExpenses={this.props.currentPeriodRegularExpenses}
+              monthlyExpenses={this.props.currentMonthRegularExpenses}
             />
           </div>
           <div className={tileClass}>
             <Rule
               percent={3}
               netWorth={this.props.netWorth}
-              monthlyExpenses={this.props.currentPeriodRegularExpenses}
+              monthlyExpenses={this.props.currentMonthRegularExpenses}
             />
           </div>
           <div className={tileClass}>
             <Rule
               percent={4}
               netWorth={this.props.netWorth}
-              monthlyExpenses={this.props.currentPeriodRegularExpenses}
+              monthlyExpenses={this.props.currentMonthRegularExpenses}
             />
           </div>
           {this.props.checkingAccounts.map(account => {
             return (
-              <div key={account.name} className={tileClass}>
+              <div key={account.number} className={tileClass}>
                 <CheckingAccount
                   amount={account.balance}
-                  description={account.name}
+                  description={account.number}
                 />
               </div>
             );
@@ -95,23 +99,29 @@ class Dashboard extends React.Component {
           })}
         </div>
         <div className="row">
-          {this.props.expensesByCategory.map(expense => {
-            return (
-              <div className={tileClass} key={expense.category}>
-                <Expense
-                  category={expense.category}
-                  currentMonth={expense.currentMonth}
-                  previousMonth={expense.previousMonth}
-                  currentYear={expense.currentYear}
-                  previousYear={expense.previousYear}
-                />
-              </div>
-            );
-          })}
+          {this.props.expensesByCategory
+            .concat(
+              this.props.savingsSummary ? [this.props.savingsSummary] : []
+            )
+            .sort((x, y) => y.currentMonth - x.currentMonth)
+            .map(expense => {
+              return (
+                <div className={tileClass} key={expense.category}>
+                  <CategorySummary
+                    category={expense.category}
+                    currentMonth={expense.currentMonth}
+                    previousMonth={expense.previousMonth}
+                    currentYear={expense.currentYear}
+                    previousYear={expense.previousYear}
+                    isCalculated={expense.isCalculated}
+                  />
+                </div>
+              );
+            })}
         </div>
         <div className="row">
           <div className="tile col-12">
-            <IncomeVsExpenses
+            <IncomeMap
               incomeTypes={this.props.incomeTypes}
               expensesBySubcategory={this.props.expensesBySubcategory}
             />
@@ -129,6 +139,11 @@ class Dashboard extends React.Component {
               isCurrentPeriod={false}
               types={this.props.incomeTypes}
             />
+          </div>
+        </div>
+        <div className="row">
+          <div className="tile col-12">
+            <BadPurchases purchases={this.props.badPurchases} />
           </div>
         </div>
         <div className="row">
@@ -156,8 +171,13 @@ Dashboard.propTypes = {
   retirementAccounts: PropTypes.array.isRequired,
   netWorth: PropTypes.number.isRequired,
   periodMetrics: PropTypes.array.isRequired,
+  savingsSummary: PropTypes.object,
   incomeTypes: PropTypes.array.isRequired,
-  currentPeriodRegularExpenses: PropTypes.number.isRequired
+  currentMonthRegularExpenses: PropTypes.number.isRequired,
+  areBadPurchasesLoading: PropTypes.bool.isRequired,
+  badPurchases: PropTypes.object.isRequired,
+  areCategorizedBalancesLoading: PropTypes.bool.isRequired,
+  areCategoriesLoading: PropTypes.bool.isRequired
 };
 
 export default Dashboard;

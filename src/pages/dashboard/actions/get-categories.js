@@ -1,13 +1,13 @@
 import notifications from "../../../components/notifications/actions";
-import { checkingAccountAppSvcsUrl } from "../../../../config/settings";
+import { categoriesAppSvcsUrl } from "../../../../config/settings";
 import { token } from "../../../../config/secrets";
 
 export default () => {
   return dispatch => {
     dispatch({
-      type: "GET_CHECKING_ACCOUNTS_PENDING"
+      type: "GET_CATEGORIES_PENDING"
     });
-    fetch(`${checkingAccountAppSvcsUrl}balances/accounts`, {
+    fetch(`${categoriesAppSvcsUrl}categories`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -16,17 +16,16 @@ export default () => {
         if (response.status < 200 || response.status > 299) {
           dispatch(
             notifications.addError({
-              message:
-                "An error occurred on the server getting the checking accounts"
+              message: "An error occurred on the server getting the categories"
             })
           );
           dispatch({
-            type: "GET_CHECKING_ACCOUNTS_REJECTED"
+            type: "GET_CATEGORIES_REJECTED"
           });
         }
         response.json().then(result => {
           dispatch({
-            type: "GET_CHECKING_ACCOUNTS_FULFILLED",
+            type: "GET_CATEGORIES_FULFILLED",
             payload: result
           });
         });
@@ -34,12 +33,11 @@ export default () => {
       .catch(() => {
         dispatch(
           notifications.addError({
-            message:
-              "An error occurred on the client getting the checking accounts"
+            message: "An error occurred on the client getting the categories"
           })
         );
         dispatch({
-          type: "GET_CHECKING_ACCOUNTS_REJECTED"
+          type: "GET_CATEGORIES_REJECTED"
         });
       });
   };

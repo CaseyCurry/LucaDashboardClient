@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { Line } from "react-chartjs-2";
+import moment from "moment";
 
 class Investments extends React.Component {
   constructor(props) {
@@ -52,7 +53,9 @@ class Investments extends React.Component {
       }
     };
     const data = {
-      labels: this.props.periods.map(period => period.date),
+      labels: this.props.periods.map(period =>
+        moment(period.period.toString(), "YYYYMM")
+      ),
       datasets: [
         {
           label: "Investments Made",

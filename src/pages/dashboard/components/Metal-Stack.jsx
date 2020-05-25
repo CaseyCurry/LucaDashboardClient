@@ -13,7 +13,7 @@ class MetalStack extends React.Component {
         <div className="secondary">
           {this.props.name.toLowerCase()}{" "}
           {this.props.totalCount.toLocaleString()}oz @ $
-          {parseFloat(this.props.spotPrice.toFixed(1)).toLocaleString()}
+          {parseFloat(this.props.spotPrice.toFixed(2)).toLocaleString()}
         </div>
         <div className="icon">
           <img

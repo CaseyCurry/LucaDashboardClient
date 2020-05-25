@@ -20,8 +20,8 @@ class Rule extends React.Component {
             ${parseFloat(portionOfNetWorth.toFixed(2)).toLocaleString()}
           </div>
           <div className="secondary">
-            {((portionOfNetWorth / yearlyExpenses) * 100).toFixed(1)}% of
-            expenses met
+            {((portionOfNetWorth / yearlyExpenses) * 100).toFixed(1)}
+            {"% of last month's expenses"}
           </div>
         </div>
       </div>

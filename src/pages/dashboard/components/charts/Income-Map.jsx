@@ -4,7 +4,7 @@ import { Sankey, makeWidthFlexible, Hint } from "react-vis";
 
 const FlexibleSankey = makeWidthFlexible(Sankey);
 
-class IncomeVsExpenses extends React.Component {
+class IncomeMap extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -64,23 +64,23 @@ class IncomeVsExpenses extends React.Component {
 
   getLinks(nodes) {
     const totalIncome = this.props.incomeTypes.reduce((x, y) => {
-      return x + y.currentYearAmount;
+      return x + y.currentYear;
     }, 0);
     const totalExpenses = this.props.expensesBySubcategory
       .filter(expense => expense.category !== "investments")
       .reduce((x, y) => x.concat(...y.subcategories), [])
-      .reduce((x, y) => x + y.currentYearAmount, 0);
+      .reduce((x, y) => x + y.currentYear, 0);
     const totalInvestments = this.props.expensesBySubcategory
       .filter(expense => expense.category === "investments")
       .reduce((x, y) => x.concat(...y.subcategories), [])
-      .reduce((x, y) => x + y.currentYearAmount, 0);
+      .reduce((x, y) => x + y.currentYear, 0);
     return this.props.incomeTypes
       .map(type => {
         return {
           source: nodes.map(node => node.name).indexOf(type.subcategory),
           target: nodes.map(node => node.name).indexOf("income"),
           color: "#71B3FD",
-          value: type.currentYearAmount
+          value: type.currentYear
         };
       })
       .concat([
@@ -116,7 +116,7 @@ class IncomeVsExpenses extends React.Component {
               target: nodes.map(node => node.name).indexOf(expense.category),
               color: "#F9A943",
               value: expense.subcategories.reduce(
-                (x, y) => x + y.currentYearAmount,
+                (x, y) => x + y.currentYear,
                 0
               )
             };
@@ -133,7 +133,7 @@ class IncomeVsExpenses extends React.Component {
                   .map(node => node.name)
                   .indexOf(expense.subcategory),
                 color: "#F0ED36",
-                value: expense.currentYearAmount
+                value: expense.currentYear
               };
             });
           })
@@ -148,7 +148,7 @@ class IncomeVsExpenses extends React.Component {
     const nodes = this.getNodes();
     const links = this.getLinks(nodes);
     return (
-      <div className="income-vs-expenses">
+      <div className="income-map">
         <div className="title">income allocation last year</div>
         <div>
           <FlexibleSankey
@@ -180,9 +180,9 @@ class IncomeVsExpenses extends React.Component {
   }
 }
 
-IncomeVsExpenses.propTypes = {
+IncomeMap.propTypes = {
   incomeTypes: PropTypes.array.isRequired,
   expensesBySubcategory: PropTypes.array.isRequired
 };
 
-export default IncomeVsExpenses;
+export default IncomeMap;

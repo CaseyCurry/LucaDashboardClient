@@ -1,0 +1,32 @@
+.bad-purchases {
+  padding: 0;
+  padding-bottom: $control-margin * 4;
+
+  .title {
+    padding-top: $control-margin * 4;
+    padding-left: $control-margin * 4;
+    padding-bottom: $control-margin * 4;
+  }
+
+  .content {
+    width: 100%;
+    font-size: 70%;
+
+    .rv-discrete-color-legend {
+      padding-left: $control-margin * 4;
+    }
+
+    .rv-discrete-color-legend-item__color {
+      height: 10px;
+      width: 10px;
+    }
+
+    .rv-discrete-color-legend-item__title {
+      margin-left: 5px;
+    }
+
+    text {
+      fill: white;
+    }
+  }
+}

@@ -2,31 +2,34 @@ import notifications from "../../../components/notifications/actions";
 import { checkingAccountAppSvcsUrl } from "../../../../config/settings";
 import { token } from "../../../../config/secrets";
 
-export default () => {
+export default (beginningPeriod, endingPeriod) => {
   return dispatch => {
     dispatch({
-      type: "GET_CHECKING_ACCOUNTS_PENDING"
+      type: "GET_CATEGORIZED_BALANCES_PENDING"
     });
-    fetch(`${checkingAccountAppSvcsUrl}balances/accounts`, {
-      headers: {
-        Authorization: `Bearer ${token}`
+    fetch(
+      `${checkingAccountAppSvcsUrl}balances/categorized?beginningPeriod=${beginningPeriod}&endingPeriod=${endingPeriod}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
-    })
+    )
       .then(response => {
         if (response.status < 200 || response.status > 299) {
           dispatch(
             notifications.addError({
               message:
-                "An error occurred on the server getting the checking accounts"
+                "An error occurred on the server getting the categorized balances"
             })
           );
           dispatch({
-            type: "GET_CHECKING_ACCOUNTS_REJECTED"
+            type: "GET_CATEGORIZED_BALANCES_REJECTED"
           });
         }
         response.json().then(result => {
           dispatch({
-            type: "GET_CHECKING_ACCOUNTS_FULFILLED",
+            type: "GET_CATEGORIZED_BALANCES_FULFILLED",
             payload: result
           });
         });
@@ -35,11 +38,11 @@ export default () => {
         dispatch(
           notifications.addError({
             message:
-              "An error occurred on the client getting the checking accounts"
+              "An error occurred on the client getting the categorized balances"
           })
         );
         dispatch({
-          type: "GET_CHECKING_ACCOUNTS_REJECTED"
+          type: "GET_CATEGORIZED_BALANCES_REJECTED"
         });
       });
   };

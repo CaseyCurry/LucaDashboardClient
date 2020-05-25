@@ -21,8 +21,8 @@ class IncomeByType extends React.Component {
         return {
           subcategory: type.subcategory,
           amount: this.props.isCurrentPeriod
-            ? type.currentPeriodAmount
-            : type.currentYearAmount
+            ? type.currentMonth
+            : type.currentYear
         };
       })
       .sort((x, y) => x.amount - y.amount);
